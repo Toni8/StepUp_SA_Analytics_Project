@@ -1,82 +1,105 @@
-# Predictive Crime Hotspot Modelling — SAPS Station-Level Analysis
+# IMS StepUp SA — Marketing Analytics Dashboard
 
-> Forecasting future crime counts at police station level using an ML ensemble,  
-> enabling proactive resource allocation across South Africa.
+> End-to-end marketing analytics solution for a South African footwear retailer.  
+> A 4-page executive Power BI dashboard covering campaign ROI, sales performance,  
+> customer segmentation & CLV, and website analytics — powered by Python and DAX  
+> across 24 months of real business data.
 
 ![Python](https://img.shields.io/badge/Python-3.10-blue?style=flat-square)
-![XGBoost](https://img.shields.io/badge/XGBoost-ensemble-orange?style=flat-square)
-![LightGBM](https://img.shields.io/badge/LightGBM-ensemble-green?style=flat-square)
-![Power BI](https://img.shields.io/badge/Power%20BI-dashboard-yellow?style=flat-square)
+![Power BI](https://img.shields.io/badge/Power%20BI-Dashboard-yellow?style=flat-square)
+![DAX](https://img.shields.io/badge/DAX-Measures-orange?style=flat-square)
+![Pandas](https://img.shields.io/badge/Pandas-Data%20Cleaning-lightgrey?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-Complete-brightgreen?style=flat-square)
 
 ---
 
 ## Overview
 
-This project builds an end-to-end machine learning pipeline to **forecast annual crime counts per SAPS police station** using 15 years of historical data (2008–2023). The goal is to shift policing strategy from reactive to proactive — identifying emerging hotspots before they escalate.
+IMS StepUp SA is a South African footwear retailer. This project delivers a full marketing analytics pipeline — from raw data cleaning in Python through to a polished executive dashboard in Power BI — enabling the business to make data-driven decisions across marketing spend, store performance, customer value, and digital channels.
 
-**Key result:** Achieved a mean absolute error (MAE) of ~200 crimes per station-year, providing actionable accuracy for real-world policing and resource planning.
+**Scope:** 24 months of real business data across campaigns, transactions, customer records, and GA4 web analytics.
 
 ---
 
-## Business Impact
+## Dashboard Pages
 
-| Challenge | Solution |
-|---|---|
-| Reactive policing wastes resources | Forecasts enable patrol pre-deployment |
-| Hard to spot emerging hotspots early | Top 20% high-risk stations flagged automatically |
-| Manual reporting is slow | Power BI dashboard provides live station-level views |
-| No forward planning for 2024 | 2024 crime forecasts generated per station |
+### Page 1 — Campaign ROI & Marketing Performance
+- Total spend vs. revenue generated per campaign
+- Return on ad spend (ROAS) by channel
+- Campaign cost-per-acquisition (CPA) trends
+- Month-over-month campaign performance comparison
+
+### Page 2 — Store & Product Sales
+- Revenue and units sold by store location
+- Top and bottom performing product categories
+- Sales trends over 24 months
+- Seasonal performance patterns
+
+### Page 3 — Customer Segmentation & CLV
+- RFM-based customer segmentation (Recency, Frequency, Monetary)
+- Customer Lifetime Value (CLV) distribution across segments
+- High-value vs. at-risk customer identification
+- Segment-level revenue contribution
+
+### Page 4 — Website Performance (GA4)
+- Sessions, users, bounce rate, and conversion rate
+- Traffic source breakdown (organic, paid, direct, referral)
+- Landing page performance
+- Online-to-store attribution trends
 
 ---
 
 ## Technical Approach
 
-### 1. Data pipeline (SQL)
-- Extracted and aggregated raw SAPS station-level records via SQL queries
-- Cleaned and validated 15 years of crime data across hundreds of stations
-- Handled missing values, outliers, and inconsistent station naming
+### Data Cleaning (Python)
+- Ingested and merged multiple raw data sources (transactions, campaigns, customer records, GA4 export)
+- Handled missing values, duplicate records, and inconsistent date/category formatting
+- Standardised customer IDs across datasets to enable cross-page analysis
+- Exported cleaned `.csv` files as Power BI data sources
 
-### 2. Feature engineering
-- **Lag features** — prior year crime counts per station
-- **Rolling averages** — 3-year and 5-year crime trend windows
-- **Station clustering** — grouped stations by crime profile similarity
-- **Temporal features** — year-over-year change rates
+### Data Modelling (Power BI)
+- Built a star schema model linking fact tables (sales, sessions) to dimension tables (customers, products, campaigns, dates)
+- Created a date dimension table for consistent time intelligence across all pages
 
-### 3. Ensemble modelling
-Three models were trained and combined into a weighted ensemble:
+### DAX Measures
+Key measures built include:
 
-| Model | Strength |
-|---|---|
-| Random Forest | Captures non-linear station-level patterns |
-| XGBoost | Handles structured tabular data with high accuracy |
-| LightGBM | Fast training on large datasets with strong generalisation |
+```dax
+-- Campaign ROAS
+ROAS = DIVIDE([Total Revenue], [Total Ad Spend], 0)
 
-Ensemble predictions outperformed any single model by leveraging each model's complementary strengths.
+-- Customer Lifetime Value
+CLV = SUMX(Customers, [Avg Order Value] * [Purchase Frequency] * [Customer Lifespan])
 
-### 4. Evaluation
-- **MAE ~200 crimes per station-year** — strong accuracy for annual forecasting
-- Precision, recall, and F1 used for high-risk classification (top 20% stations)
-- Cross-validated across time splits to prevent data leakage
+-- Month-over-Month Growth
+MoM Growth % = 
+DIVIDE(
+    [Revenue This Month] - [Revenue Last Month],
+    [Revenue Last Month],
+    0
+)
+```
 
-### 5. Geospatial & reporting
-- Provincial-level crime maps generated using `gadm41_ZAF_1.json` boundary data
-- Power BI dashboard built for stakeholder reporting and station-level drill-down
+### Customer Segmentation
+- RFM scoring applied in Python (Pandas) to classify customers into segments: Champions, Loyal, At Risk, Lost
+- Segment labels imported into Power BI as a dimension for cross-filter analysis
 
 ---
 
 ## Repository Structure
 
 ```
-saps_crime_project/
-├── data/                   # Raw and processed SAPS crime data
-├── notebooks/              # Jupyter notebooks (EDA, modelling, forecasting)
-├── models/                 # Saved trained models
-├── sql/                    # SQL scripts for data extraction and aggregation
-├── power bi/               # Power BI dashboard file (.pbix)
-├── map_files/
-│   └── gadm41_ZAF_1.json  # South Africa provincial boundary GeoJSON
-└── SAPS_Theme.json         # Custom Power BI theme
+ims-stepup-sa/
+├── data/
+│   ├── raw/                  # Original source data
+│   └── cleaned/              # Python-processed output files
+├── notebooks/
+│   └── data_cleaning.ipynb   # Python cleaning and RFM segmentation
+├── powerbi/
+│   └── StepUp_Dashboard.pbix # Full 4-page Power BI dashboard
+├── dax/
+│   └── measures.md           # All DAX measure definitions
+└── README.md
 ```
 
 ---
@@ -84,30 +107,37 @@ saps_crime_project/
 ## How to Run
 
 ```bash
-# Clone the repository
-git clone https://github.com/Toni8/saps_crime_project.git
-cd saps_crime_project
+# Clone the repo
+git clone https://github.com/Toni8/<repo-name>.git
+cd ims-stepup-sa
 
-# Install dependencies
-pip install pandas numpy scikit-learn xgboost lightgbm matplotlib seaborn jupyter
+# Install Python dependencies
+pip install pandas numpy matplotlib seaborn jupyter
 
-# Launch notebooks
-jupyter notebook notebooks/
+# Run the cleaning notebook
+jupyter notebook notebooks/data_cleaning.ipynb
 ```
 
-Open the notebooks in order — EDA first, then feature engineering, then modelling.
+To view the dashboard, open `powerbi/StepUp_Dashboard.pbix` in Power BI Desktop.
+
+> Note: Source data has been anonymised where required to protect business confidentiality.
+
+---
+
+## Key Business Insights Delivered
+
+| Area | Insight |
+|---|---|
+| Campaigns | Identified highest and lowest ROAS channels across 24 months |
+| Products | Pinpointed top revenue-driving categories by store |
+| Customers | Segmented customer base by lifetime value for targeted retention |
+| Website | Linked GA4 traffic sources to in-store and online conversion |
 
 ---
 
 ## Tech Stack
 
-`Python` · `Pandas` · `NumPy` · `Scikit-Learn` · `XGBoost` · `LightGBM` · `SQL` · `Power BI` · `Matplotlib` · `Seaborn` · `GeoJSON`
-
----
-
-## About the Data
-
-Data sourced from publicly available **SAPS (South African Police Service)** crime statistics, covering station-level crime counts across all provinces from 2008 to 2023. No personally identifiable information is included.
+`Python` · `Pandas` · `Power BI` · `DAX` · `GA4` · `Matplotlib` · `Seaborn` · `Excel`
 
 ---
 
